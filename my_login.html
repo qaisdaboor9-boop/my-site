@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - موقعي</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 350px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        h2 { font-size: 28px; margin-bottom: 30px; color: #262626; }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 8px 0;
+            background: #fafafa;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #1877f2; }
+        .error-message { color: #e74c3c; font-size: 13px; margin-top: 10px; display: none; }
+        .success-message { color: #00c853; font-size: 13px; margin-top: 10px; display: none; }
+        .link { margin-top: 20px; }
+        .link a { color: #0095f6; text-decoration: none; font-size: 14px; }
+        .success-screen {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .success-icon { font-size: 80px; color: #00c853; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <!-- صفحة تسجيل الدخول -->
+    <div class="container" id="loginScreen">
+        <h2>تسجيل الدخول</h2>
+        <form id="loginForm">
+            <input type="text" id="loginEmail" placeholder="البريد الإلكتروني" required>
+            <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+            <div class="error-message" id="loginError"></div>
+            <button type="submit">تسجيل الدخول</button>
+        </form>
+        <div class="link"><a href="#" id="toRegister">إنشاء حساب جديد</a></div>
+    </div>
+
+    <!-- صفحة إنشاء حساب -->
+    <div class="container" id="registerScreen" style="display: none;">
+        <h2>إنشاء حساب جديد</h2>
+        <form id="registerForm">
+            <input type="text" id="regEmail" placeholder="البريد الإلكتروني" required>
+            <input type="password" id="regPassword" placeholder="كلمة المرور (6 أحرف على الأقل)" required>
+            <div class="error-message" id="regError"></div>
+            <div class="success-message" id="regSuccess"></div>
+            <button type="submit">إنشاء الحساب</button>
+        </form>
+        <div class="link"><a href="#" id="toLogin">لديك حساب؟ تسجيل الدخول</a></div>
+    </div>
+
+    <!-- شاشة النجاح بعد الدخول -->
+    <div class="container success-screen" id="successScreen">
+        <div class="success-icon">✓</div>
+        <h2>مرحباً بعودتك!</h2>
+        <p>تم تسجيل الدخول بنجاح في موقعك الخاص.</p>
+        <button onclick="location.reload()">الخروج</button>
+    </div>
+
+    <script>
+        // قاعدة البيانات في localStorage (شرعي 100%، بيانات المستخدم عنده هو بس)
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        function saveUsers() {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // الانتقال بين الصفحات
+        document.getElementById('toRegister').onclick = function(e) {
+            e.preventDefault();
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'block';
+        };
+
+        document.getElementById('toLogin').onclick = function(e) {
+            e.preventDefault();
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+        };
+
+        // إنشاء حساب جديد
+        document.getElementById('registerForm').onsubmit = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            document.getElementById('regError').style.display = 'none';
+            document.getElementById('regSuccess').style.display = 'none';
+
+            if (!email.includes('@') || email.length < 5) {
+                document.getElementById('regError').textContent = 'البريد الإلكتروني غير صالح';
+                document.getElementById('regError').style.display = 'block';
+                return;
+            }
+            if (password.length < 6) {
+                document.getElementById('regError').textContent = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                document.getElementById('regError').style.display = 'block';
+                return;
+            }
+
+            // تحقق لو الإيميل موجود بالفعل
+            if (users.find(user => user.email === email)) {
+                document.getElementById('regError').textContent = 'هذا البريد مستخدم بالفعل';
+                document.getElementById('regError').style.display = 'block';
+                return;
+            }
+
+            // إضافة المستخدم الجديد
+            users.push({ email, password });
+            saveUsers();
+
+            document.getElementById('regSuccess').textContent = 'تم إنشاء الحساب بنجاح!';
+            document.getElementById('regSuccess').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('registerScreen').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'block';
+            }, 2000);
+        };
+
+        // تسجيل الدخول
+        document.getElementById('loginForm').onsubmit = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            document.getElementById('loginError').style.display = 'none';
+
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'flex';
+            } else {
+                document.getElementById('loginError').textContent = 'البريد أو كلمة المرور غير صحيحة';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
